@@ -1,0 +1,139 @@
+{% include "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<style>
+    /* Card */
+.card {
+  background: #16161c;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 2rem;
+  max-width: 680px;
+  margin: 3rem auto;
+}
+
+h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 24px;
+  color: #e8b86d;
+  margin-bottom: 1.5rem;
+}
+
+/* Success state */
+h1 + p { font-size: 14px; color: rgba(255,255,255,0.45); }
+h1 + p a { color: #e8b86d; text-decoration: none; }
+h1 + p a:hover { text-decoration: underline; }
+
+/* Crispy field labels */
+label {
+  font-size: 13px;
+  color: rgba(255,255,255,0.5) !important;
+  margin-bottom: 5px;
+}
+
+/* All inputs */
+.form-control {
+  background: #0c0c0f !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  border-radius: 8px !important;
+  color: #f0f0f0 !important;
+  font-size: 14px;
+  padding: 10px 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-control:focus {
+  border-color: #e8b86d !important;
+  box-shadow: 0 0 0 3px rgba(232,184,109,0.1) !important;
+}
+
+.form-control::placeholder { color: rgba(255,255,255,0.2) !important; }
+
+/* File input */
+.form-control[type="file"] { padding: 8px 14px; cursor: pointer; }
+
+/* Submit */
+input[type="submit"] {
+  background: #e8b86d;
+  border: none;
+  color: #000;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 10px 26px;
+  border-radius: 50px;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: opacity 0.2s, transform 0.15s;
+}
+
+input[type="submit"]:hover  { opacity: 0.85; transform: translateY(-1px); }
+input[type="submit"]:active { transform: scale(0.97); }
+
+/* Crispy error text */
+.invalid-feedback, .text-danger {
+  font-size: 11px;
+  color: #ff6b6b !important;
+}
+</style>
+ <div CLASS="container">
+        <div class="jumbotron">
+            <div class="card card-body">
+                {% if registered %}
+                    <h1>Thankyou for registration..!!</h1>
+                    <p>please proceed to <a href="login">login</a></p>
+
+                {% else %}
+
+                <h1>REGISTRATION FORM</h1>
+                <form enctype="multipart/form-data" method="POST">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.username | as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.email | as_crispy_field }} 
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form1.phone | as_crispy_field }}
+                        </div>
+                         <div class="row">
+                        <div class="col-md-12">          
+                            {{ form1.age | as_crispy_field }}     
+                        </div>
+                    </div>
+                       
+                    </div>
+
+                    
+
+                    <div class="row">
+                        <div class="col-md-12">          
+                            {{ form1.userpic | as_crispy_field }}     
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">          
+                            {{ form.password | as_crispy_field }}     
+                        </div>
+                    </div>
+              
+                <input type="submit" value="REGISTER">  
+                </form>
+                {% endif %}
+                    
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+
+{% endblock content %}

@@ -1,0 +1,593 @@
+ {% extends "base.html" %} 
+{% comment %} <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CineScope</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    {% endcomment %}
+    {% load static %} 
+    {% block content %}
+    <style>
+          *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+          :root {
+            --bg: #0c0c0f;
+            --surface: #16161c;
+            --border: rgba(255,255,255,0.08);
+            --accent: #e8b86d;
+            --accent2: #c084fc;
+            --text: #f0f0f0;
+            --muted: rgba(255,255,255,0.4);
+          }
+
+          body {
+            background: var(--bg);
+            font-family: 'DM Sans', sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+          }
+
+          /* ── HEADER ── */
+          header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.2rem 2rem;
+            border-bottom: 1px solid var(--border);
+            position: sticky; top: 0; z-index: 50;
+            background: rgba(12,12,15,0.85);
+            backdrop-filter: blur(12px);
+          }
+
+          .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 22px;
+            letter-spacing: 1px;
+            color: var(--accent);
+          }
+
+          .tagline {
+            font-size: 11px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--muted);
+          }
+
+          /* ── HERO / SEARCH ── */
+          .hero {
+            text-align: center;
+            padding: 4rem 1rem 2.5rem;
+          }
+
+          .hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(32px, 6vw, 56px);
+            color: var(--text);
+            margin-bottom: 0.5rem;
+          }
+
+          .hero h1 span { color: var(--accent); }
+
+          .hero p {
+            font-size: 14px;
+            color: var(--muted);
+            letter-spacing: 1px;
+            margin-bottom: 2rem;
+          }
+
+          .search-bar {
+            display: flex;
+            align-items: center;
+            max-width: 520px;
+            margin: 0 auto;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 50px;
+            padding: 6px 6px 6px 20px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+          }
+
+          .search-bar:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(232,184,109,0.12);
+          }
+
+          .search-bar input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 15px;
+          }
+
+          .search-bar input::placeholder { color: var(--muted); }
+
+          .search-btn {
+            background: var(--accent);
+            border: none;
+            color: #000;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 10px 24px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.15s;
+          }
+
+          .search-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+          .search-btn:active { transform: scale(0.97); }
+
+          /* ── GRID ── */
+          #container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 18px;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 1.5rem 2rem 4rem;
+          }
+
+          .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+          }
+
+          .card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent);
+            box-shadow: 0 12px 32px rgba(232,184,109,0.15);
+          }
+
+          .card img {
+            width: 100%;
+            aspect-ratio: 2/3;
+            object-fit: cover;
+            display: block;
+            background: #222;
+          }
+
+          .card-info { padding: 10px 12px 12px; }
+
+          .card-info h3 {
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1.35;
+            margin-bottom: 4px;
+          }
+
+          .card-info p {
+            font-size: 11px;
+            color: var(--muted);
+          }
+
+          /* ── EMPTY STATE ── */
+          .empty {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--muted);
+          }
+
+          .empty svg { opacity: 0.2; margin-bottom: 1rem; }
+          .empty p { font-size: 14px; }
+
+          /* ── MODAL OVERLAY ── */
+          .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+          }
+
+          .modal-overlay.open { display: flex; }
+
+          /* ── MODAL BOX ── */
+          .modal-box {
+            background: var(--surface);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 480px;
+            max-height: 88vh;
+            overflow-y: auto;
+            animation: slideUp 0.22s ease;
+          }
+
+          @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to   { transform: translateY(0);    opacity: 1; }
+          }
+
+          .modal-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+            position: sticky; top: 0;
+            background: var(--surface);
+            z-index: 1;
+          }
+
+          .modal-head h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 18px;
+            color: var(--accent);
+          }
+
+          .close-btn {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid var(--border);
+            color: var(--muted);
+            width: 30px; height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s, color 0.2s;
+          }
+
+          .close-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+
+          .modal-body { padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; }
+
+          #modalPoster {
+            width: 100%;
+            max-height: 240px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+          }
+
+          #modalPlot {
+            font-size: 13px;
+            line-height: 1.75;
+            color: rgba(255,255,255,0.55);
+          }
+
+          .badges { display: flex; flex-wrap: wrap; gap: 8px; }
+
+          .badge {
+            font-size: 12px;
+            font-weight: 500;
+            padding: 4px 12px;
+            border-radius: 20px;
+          }
+
+          .badge-genre  { background: rgba(192,132,252,0.12); border: 1px solid rgba(192,132,252,0.3); color: var(--accent2); }
+          .badge-rating { background: rgba(232,184,109,0.12); border: 1px solid rgba(232,184,109,0.3); color: var(--accent); }
+          .badge-box    { background: rgba(74,222,128,0.10);  border: 1px solid rgba(74,222,128,0.25); color: #4ade80; }
+
+
+          {% comment %} Review Design {% endcomment %}
+          h3 {
+        font-family: 'Playfair Display', serif;
+        font-size: 20px;
+        color: #e8b86d;
+        margin-bottom: 1rem;
+      }
+
+      #stars span {
+        font-size: 28px;
+        cursor: pointer;
+        color: rgba(255,255,255,0.15);
+        transition: color 0.15s, transform 0.1s;
+        margin-right: 4px;
+      }
+
+      #stars span:hover,
+      #stars span.filled { color: #e8b86d; }
+
+      #stars span:hover { transform: scale(1.15); }
+
+      p {
+        font-size: 13px;
+        color: rgba(255,255,255,0.4);
+        margin: 0.6rem 0 1rem;
+      }
+
+      #reviewInput {
+        width: 100%;
+        min-height: 90px;
+        padding: 10px 14px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 14px;
+        background: #16161c;
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 10px;
+        color: #f0f0f0;
+        resize: vertical;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+      }
+
+      #reviewInput::placeholder { color: rgba(255,255,255,0.25); }
+
+      #reviewInput:focus {
+        border-color: #e8b86d;
+        box-shadow: 0 0 0 3px rgba(232,184,109,0.1);
+      }
+
+      button {
+        background: #e8b86d;
+        border: none;
+        color: #000;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 10px 22px;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: opacity 0.2s, transform 0.15s;
+      }
+
+      button:hover  { opacity: 0.85; transform: translateY(-1px); }
+      button:active { transform: scale(0.97); }
+
+      h4 {
+        font-size: 14px;
+        color: rgba(255,255,255,0.4);
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        margin: 1.5rem 0 1rem;
+        border-top: 1px solid rgba(255,255,255,0.08);
+        padding-top: 1.2rem;
+      }
+
+      #reviewsContainer .review-card {
+        background: #16161c;
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 10px;
+      }
+    </style>
+
+    {% comment %}
+    <header>
+      <div class="logo">CineScope</div>
+      <span class="tagline">Movie Discovery</span>
+    </header>
+    {% endcomment %}
+
+    <div class="hero">
+      <h1>Find Your <span>Film</span></h1>
+      <p>Search from millions of titles</p>
+      <div class="search-bar">
+        <input
+          type="text"
+          id="search"
+          placeholder="e.g. Inception, Dark Knight…"
+        />
+        <button class="search-btn" onclick="moviesearch()">Search</button>
+      </div>
+    </div>
+
+    <div id="container">
+      <div class="empty">
+        <svg
+          width="48"
+          height="48"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="white"
+          stroke-width="1.2"
+        >
+          <path
+            d="M7 4v16M17 4v16M3 8h4m10 0h4M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"
+          />
+        </svg>
+        <p>Search for a movie to get started</p>
+      </div>
+    </div>
+
+    <!-- MODAL -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+      <div class="modal-box">
+        <div class="modal-head">
+          <h2 id="modalTitle"></h2>
+          <button class="close-btn" onclick="closeModalDirect()">✕</button>
+        </div>
+        <div class="modal-body">
+          <img id="modalPoster" src="" alt="Poster" />
+          <p id="modalPlot"></p>
+          <div class="badges">
+            <span class="badge badge-genre" id="modalGenre"></span>
+            <span class="badge badge-rating" id="modalRating"></span>
+            <span class="badge badge-box" id="modalBoxOffice"></span>
+          </div>
+        </div>
+        <h3>Rate this Movie</h3>
+
+<form method="POST" onsubmit="submitReview(event)">
+  {% csrf_token %}
+  <input type="hidden" id="movieTitleInput" name="movie_title"> 
+
+  <input type="hidden" name="rating" id="ratingInput">
+
+  <!-- Stars -->
+  <div id="stars">
+    <span onclick="setRating(1)">★</span>
+    <span onclick="setRating(2)">★</span>
+    <span onclick="setRating(3)">★</span>
+    <span onclick="setRating(4)">★</span>
+    <span onclick="setRating(5)">★</span>
+  </div>
+
+  <p>Rating: <span id="ratingValue">0</span>/5</p>
+
+  <!-- Review -->
+  <textarea name="review" placeholder="Write your review..."></textarea>
+
+  <br><br>
+
+  <button type="submit">Submit</button>
+</form>
+
+<hr>
+
+<h4>User Reviews</h4>
+
+<div id="reviewsContainer">
+  {% for r in reviews %}
+    <div style="border:1px solid #ccc; padding:10px; margin-top:10px;">
+      <b>{{ r.user.username }}</b> ({{ r.rating }}/5)<br>
+      {{ r.review }}
+    </div>
+  {% empty %}
+    <p>No reviews yet</p>
+  {% endfor %}
+</div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+          const API_KEY = '74a7ae4b';
+
+          async function moviesearch() {
+            const query = document.getElementById('search').value.trim();
+            if (!query) return;
+
+            const container = document.getElementById('container');
+            container.innerHTML = '<div class="empty"><p>Searching…</p></div>';
+
+            try {
+              const res  = await fetch(`https://www.omdbapi.com/?s=${encodeURIComponent(query)}&apikey=${API_KEY}`);
+              const data = await res.json();
+
+              if (data.Response === 'False') {
+                container.innerHTML = '<div class="empty"><p>No results found. Try a different title.</p></div>';
+                return;
+              }
+
+              container.innerHTML = data.Search.map(m => `
+                <div class="card" onclick="getDetails('${m.imdbID}')">
+                  <img src="${m.Poster !== 'N/A' ? m.Poster : 'https://placehold.co/150x225/16161c/555?text=No+Poster'}" alt="${m.Title}">
+                  <div class="card-info">
+                    <h3>${m.Title}</h3>
+                    <p>${m.Year}</p>
+                  </div>
+                </div>
+              `).join('');
+
+            } catch (err) {
+              container.innerHTML = '<div class="empty"><p>Something went wrong. Try again.</p></div>';
+              console.error(err);
+            }
+          }
+
+          async function getDetails(id) {
+            try {
+              const res  = await fetch(`https://www.omdbapi.com/?i=${id}&apikey=${API_KEY}`);
+              const data = await res.json();
+
+              document.getElementById('modalTitle').textContent     = data.Title;
+              document.getElementById('modalPoster').src            = data.Poster !== 'N/A' ? data.Poster : '';
+              document.getElementById('modalPlot').textContent      = data.Plot;
+              document.getElementById('modalGenre').textContent     = '🎬 ' + data.Genre;
+              document.getElementById('modalRating').textContent    = '⭐ ' + data.imdbRating + ' / 10';   // fixed
+              document.getElementById('modalBoxOffice').textContent = '💵 ' + (data.BoxOffice || 'N/A');
+              document.getElementById('movieTitleInput').value = data.Title
+              
+              loadReviews(data.Title)
+
+              document.getElementById('modalOverlay').classList.add('open');
+            } catch (err) {
+              console.error(err);
+            }
+          }
+
+          function closeModal(e) {
+            if (e.target === document.getElementById('modalOverlay')) closeModalDirect();
+          }
+
+          function closeModalDirect() {
+            document.getElementById('modalOverlay').classList.remove('open');
+          }
+
+          document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeModalDirect();
+          });
+
+          document.getElementById('search').addEventListener('keydown', e => {
+            if (e.key === 'Enter') moviesearch();
+          });
+
+          {% comment %} Review Quota {% endcomment %}
+          let rating = 0;
+
+function setRating(value) {
+  rating = value;
+
+  // update hidden input
+  document.getElementById("ratingInput").value = value;
+
+  // show number
+  document.getElementById("ratingValue").textContent = value;
+
+  // highlight stars
+  const stars = document.querySelectorAll("#stars span");
+  stars.forEach((star, index) => {
+    star.style.color = index < value ? "gold" : "gray";
+  });
+}
+
+async function loadReviews(movieTitle) {
+    const res = await fetch(`/index/?movie=${encodeURIComponent(movieTitle)}`);
+    const text = await res.text();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(text, 'text/html');
+    const reviews = doc.getElementById('reviewsContainer').innerHTML;
+    document.getElementById('reviewsContainer').innerHTML = reviews;
+}
+
+async function submitReview(e) {
+    e.preventDefault();  // ✅ stop page reload
+
+    const movieTitle = document.getElementById('movieTitleInput').value;
+    const rating = document.getElementById('ratingInput').value;
+    const review = document.querySelector('textarea[name="review"]').value;
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    const formData = new FormData();
+    formData.append('rating', rating);
+    formData.append('review', review);
+    formData.append('csrfmiddlewaretoken', csrfToken);
+
+    await fetch(`/index/?movie=${encodeURIComponent(movieTitle)}`, {
+        method: 'POST',
+        body: formData
+    });
+
+    // ✅ reload reviews without closing modal
+    loadReviews(movieTitle);
+
+    // reset form
+    document.querySelector('textarea[name="review"]').value = '';
+    document.getElementById('ratingInput').value = '';
+    document.getElementById('ratingValue').textContent = '0';
+    document.querySelectorAll('#stars span').forEach(s => s.style.color = 'gray');
+}
+
+
+     
+    </script>
+{% endblock  %}
