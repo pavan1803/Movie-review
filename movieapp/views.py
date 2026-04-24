@@ -6,6 +6,7 @@ from django.http import HttpResponse
 import json
 from django.http import JsonResponse
 from .models import Review
+from django.contrib.auth.models import User
 
 
 
@@ -23,13 +24,14 @@ def registeration(request):
             profile = form1.save(commit=False)
             profile.user = user
             profile.save()
+
+            return redirect('login')
     else:
         form = UserForm()
         form1 = UserProfile()
     context = {'form':form,'form1':form1
                }
     return render (request,'register.html',context)
-
 
 
 
@@ -58,10 +60,12 @@ def logout_view(request):
 
 @login_required(login_url="login") 
 def index(request):
-    movie_title = request.GET.get("movie","Inception")
+    movie_title = request.GET.get("movie")
 
 
     if request.method == "POST":
+
+        
         rating = request.POST.get("rating")
         review_text = request.POST.get("review")
 
@@ -82,3 +86,14 @@ def index(request):
         "reviews": reviews,
         "movie_title": movie_title
     })
+
+
+def create_admin(request):
+    if not User.objects.filter(username="admin").exists():
+        User.objects.create_superuser(
+            username="admin",
+            password="admin123",
+            email="admin@test.com"
+        )
+        return HttpResponse("Admin created")
+    return HttpResponse("Admin already exists")
